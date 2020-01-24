@@ -111,8 +111,7 @@ print("\nQuery #2.1: What are the ten most expensive items in the database?")
 most_expensive_products = curs.execute(
     """
     SELECT ProductName
-    FROM Product, Supplier
-    WHERE Product.SupplierId = Supplier.Id
+    FROM Product
     ORDER BY UnitPrice DESC
     LIMIT 10
     ;
@@ -125,8 +124,10 @@ for item_num in range(len(most_expensive_products)):
     most_expensive_products[item_num] = most_expensive_products[item_num][0]
 
 # Print answer:
+expensive_rank = 1
 for product in most_expensive_products:
-    print(product)
+    print(f"{expensive_rank}. {product}")
+    expensive_rank += 1
 
 
 # --------------------------------------------------
@@ -150,7 +151,24 @@ print(f"Employees' avg. age at hiring date: {round(avg_age_at_hiring, 0)}")
 
 # (Stretch)
 # Query #2.3: How does the average age of employee at hire vary by city?
+print("\nQuery #2.3: How does the average age of employee at hire vary by city?")
+avg_hiring_age_by_city = curs.execute(
+    """SELECT City, AVG(AgeAtHiring)
+    FROM
+    (SELECT FirstName, LastName, City, (HireDate - BirthDate) AS AgeAtHiring
+    FROM Employee)
+    GROUP BY City
+    ORDER BY AVG(AgeAtHiring) ASC
+    ;
+    """
+).fetchall()
 
+# Print results in a more readable form:
+for city_num in range(len(avg_hiring_age_by_city)):
+    print(f"{avg_hiring_age_by_city[city_num][0]}: {avg_hiring_age_by_city[city_num][1]} years")
+
+
+# --------------------------------------------------
 
 # ### Part 3 - Sailing the Northwind Seas
 #
@@ -180,6 +198,15 @@ most_expensive_with_suppliers = curs.execute(
     """
 ).fetchall()
 
+# For my records only: Alternate syntax using JOIN
+# (instead of implicit join as above) that does the same thing:
+# SELECT ProductName, Product.SupplierId, Supplier.Id, Supplier.CompanyName
+# FROM Product
+# LEFT JOIN Supplier ON Product.SupplierId = Supplier.Id
+# ORDER BY UnitPrice DESC
+# LIMIT 10
+# ;
+
 # Print answer:
 product_num = 1
 for product in most_expensive_with_suppliers:
@@ -204,6 +231,30 @@ largest_category = curs.execute(
     """
 ).fetchone()
 
+# For my records only: Alternative syntax with JOIN that does the same as the above:
+
+# Alternative syntax #1: JOIN Category onto Products:
+# SELECT CategoryName, MAX(num_products)
+# FROM (
+# SELECT COUNT(DISTINCT Product.Id) AS num_products, Category.CategoryName
+# FROM Product
+# LEFT JOIN Category ON Product.CategoryId = Category.Id
+# GROUP BY Product.CategoryId
+# ORDER BY num_products DESC
+# )
+# ;
+
+# Alternative syntax #2: JOIN Products onto Category:
+# SELECT CategoryName, MAX(num_products)
+# FROM (
+# SELECT Category.CategoryName, COUNT(DISTINCT Product.Id) AS num_products
+# FROM Category
+# LEFT JOIN Product ON Category.Id = Product.CategoryId
+# GROUP BY Category.Id
+# ORDER BY num_products DESC
+# )
+# ;
+
 # Print answer:
 print(f"Largest category: {largest_category[0]} ({largest_category[1]} unique products)")
 
@@ -212,8 +263,45 @@ print(f"Largest category: {largest_category[0]} ({largest_category[1]} unique pr
 
 # (Stretch)
 # Query #3.3: Who's the employee with the most territories?
-# Use TerritoryId (not name, region, or other fields) as the
-# unique identifier for territories.
+print("\nQuery #3.3: Who's the employee with the most territories?")
+most_territories = curs.execute(
+    """
+    SELECT (FirstName || ' ' || LastName), MAX(NumTerritories)
+    FROM (
+    SELECT Employee.FirstName, LastName, COUNT(DISTINCT TerritoryId) AS NumTerritories
+    FROM EmployeeTerritory, Employee
+    WHERE Employee.Id = EmployeeTerritory.EmployeeId
+    GROUP BY EmployeeTerritory.EmployeeId
+    ORDER BY NumTerritories DESC
+    )
+    ;
+    """
+).fetchone()
+
+# For my records only: Alternative syntax to do the same as the above with JOIN:
+
+# Alternative syntax #1: JOIN Employee onto EmployeeTerritory:
+# SELECT (FirstName || ' ' || LastName), MAX(NumTerritories)
+# FROM (
+# SELECT Employee.FirstName, LastName, COUNT(DISTINCT TerritoryId) AS NumTerritories
+# FROM EmployeeTerritory
+# INNER JOIN Employee ON Employee.Id = EmployeeTerritory.EmployeeId
+# GROUP BY EmployeeId
+# )
+# ;
+
+# Alternative syntax #2: JOIN EmployeeTerritory onto Employee:
+# SELECT (FirstName || ' ' || LastName), MAX(NumTerritories)
+# FROM (
+# SELECT Employee.FirstName, LastName, COUNT(DISTINCT TerritoryId) AS NumTerritories
+# FROM Employee
+# LEFT JOIN EmployeeTerritory ON EmployeeTerritory.EmployeeId = Employee.Id
+# GROUP BY EmployeeId
+# )
+# ;
+
+# Print answer:
+print(f"{most_territories[0]} ({most_territories[1]} territories)\n")
 
 
 # Close our cursor, commit the connection,
