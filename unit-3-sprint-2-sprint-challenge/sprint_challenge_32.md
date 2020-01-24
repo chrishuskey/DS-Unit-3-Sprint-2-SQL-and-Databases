@@ -54,12 +54,19 @@ Make sure to `commit()` so your data is saved! The file size should be non-zero.
 Then write the following queries (also with `sqlite3`) to test:
 
 - Count how many rows you have - it should be 3!
+A (Chris): Yes, it is 3 rows (see demo_data.py file).
+
 - How many rows are there where both `x` and `y` are at least 5?
+A (Chris): 2 rows (see demo_data.py file).
+
 - How many unique values of `y` are there (hint - `COUNT()` can accept a keyword
   `DISTINCT`)?
+A (Chris): 2 unique values of y (see demo_data.py file).
 
 Your code (to reproduce all above steps) should be saved in `demo_data.py` and
 added to the repository along with the generated SQLite database.
+
+# -----------------------------------------
 
 ### Part 2 - The Northwind Database
 
@@ -102,13 +109,30 @@ particular table, but it's a good lesson in the danger of keyword conflicts.
 Answer the following questions (each is from a single table):
 
 - What are the ten most expensive items (per unit price) in the database?
+A (Chris): 10 most expensive products:
+Côte de Blaye
+Thüringer Rostbratwurst
+Mishi Kobe Niku
+Sir Rodney's Marmalade
+Carnarvon Tigers
+Raclette Courdavault
+Manjimup Dried Apples
+Tarte au sucre
+Ipoh Coffee
+Rössle Sauerkraut
+(see northwind.py file).
+
 - What is the average age of an employee at the time of their hiring? (Hint: a
   lot of arithmetic works with dates.)
+A (Chris): Avg. age at hiring is 37 years (see northwind.py file).
+
 - (*Stretch*) How does the average age of employee at hire vary by city?
 
 Your code (to load and query the data) should be saved in `northwind.py`, and
 added to the repository. Do your best to answer in purely SQL, but if necessary
 use Python/other logic to help.
+
+# -----------------------------------------
 
 ### Part 3 - Sailing the Northwind Seas
 
@@ -119,9 +143,28 @@ Using `sqlite3` in `northwind.py`, answer the following:
 
 - What are the ten most expensive items (per unit price) in the database *and*
   their suppliers?
+A (Chris):
+The 10 most expensive items in the database and their suppliers:
+1. Côte de Blaye (Supplier: Aux joyeux ecclésiastiques)
+2. Thüringer Rostbratwurst (Supplier: Plutzer Lebensmittelgroßmärkte AG)
+3. Mishi Kobe Niku (Supplier: Tokyo Traders)
+4. Sir Rodney's Marmalade (Supplier: Specialty Biscuits, Ltd.)
+5. Carnarvon Tigers (Supplier: Pavlova, Ltd.)
+6. Raclette Courdavault (Supplier: Gai pâturage)
+7. Manjimup Dried Apples (Supplier: G'day, Mate)
+8. Tarte au sucre (Supplier: Forêts d'érables)
+9. Ipoh Coffee (Supplier: Leka Trading)
+10. Rössle Sauerkraut (Supplier: Plutzer Lebensmittelgroßmärkte AG)
+(see northwind.py file).
+
 - What is the largest category (by number of unique products in it)?
+A (Chris): The largest category is Confections, with
+13 unique products in it (see northwind.py file).
+
 - (*Stretch*) Who's the employee with the most territories? Use `TerritoryId`
   (not name, region, or other fields) as the unique identifier for territories.
+
+# -----------------------------------------
 
 ### Part 4 - Questions (and your Answers)
 
@@ -130,9 +173,63 @@ interview screening questions (a form you fill when applying for a job):
 
 - In the Northwind database, what is the type of relationship between the
   `Employee` and `Territory` tables?
+Answer (Chris):
+The Territory table is connected to the Employee Territory
+table via TerritoryId (key Id in the Territory table = TerritoryId
+in the EmployeeTerritory table), and the EmployeeTerritory
+table is connected to the Employee table via the EmployeeId key
+(key Id in the Employee table = EmployeeId in the EmployeeTerritory
+table).
+
+So you could do an implicit join via a WHERE statement in
+query as below:
+WHERE (Employee.Id = EmployeeTerritory.EmployeeId) AND
+(EmployeeTerritory.TerritoryId = Territory.Id)
+
+# -------------------------------------------------------
+
 - What is a situation where a document store (like MongoDB) is appropriate, and
   what is a situation where it is not appropriate?
+  Answer (Chris):
+  A document store DB like MongoDB that stores JSON docs
+  (JSON docs are data formatted as key:value pairs) can be very
+  useful when you have truly massive amounts of data, such that
+  storing the entire DB in one single place (e.g., one
+  HW device/server) to use it as a relational database would
+  be far too expensive or even impossible (require vertical
+  scaling your HW to a point at which it is extremely
+  expensive, or maybe does not even exist yet). In such a
+  situation, a document store DB ("NoSQL DB" / non-relational
+  DB) can be extremely useful and more much cost-efficient,
+  because it can allow you to distribute the compute task/process
+  across many cheaper (and existing today) HW devices, using
+  much more cost-efficient parallel processing / distributed
+  computing approach. For example (one method -- MapReduce):
+  sharding your data into many different parts
+  --> run a map operation to sort or filter each shard of
+  local data as needed
+  --> run a reduce operation to process and operation on each
+  local shard of data and combine all into the final result we want.
+  (a MapReduce approach, as used in Hadoop HDFS-es)
+
+  A document store DB would not be as appropriate for a situation
+  in which having well-structured, quickly queryable data is your
+  #1 priority. For example, if your database is meant primarily
+  for your business analysts to query using SQL, and you don't
+  have truly massive amounts of data (e.g., 10,000s of customers,
+  products, orders instead of 10 mns of customers, products,
+  orders).
+
+# -------------------------------------------------------
+
 - What is "NewSQL", and what is it trying to achieve?
+Answer (Chris):
+NewSQL DB solutions aim to combine the ease-of-use of SQL in the form
+of queries via SQL (Structured Query Language) with the horizontal
+scalability and connected greater computational cost-efficiency
+possible with non-relational (document store or "NoSQL") DBs.
+
+# -----------------------------------------
 
 ### Part 5 - Turn it in!
 Provide all the files you wrote (`demo_data.py`, `northwind.py`), as well as
